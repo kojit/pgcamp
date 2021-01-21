@@ -1,0 +1,107 @@
+{% extends "layout.html" %}
+{% block content %}
+
+<div class="card blue-grey darken-1">
+    <div class="card-content white-text">
+        <div class="section">
+            <video id="video" autoplay playsinline style="width:640px; height: 480px"></video>
+            <canvas style="display: none;"></canvas>
+            <img id="image" style="display: none;"></img>
+        </div>
+        <div class="section">
+            <h4>この果物はなに？ いくら？</h4>
+
+            <div id="progress" class="progress" style="display: none;">
+                <div class="indeterminate"></div>
+            </div>
+
+            <h4 id="price"></h4>
+        </div>
+    </div>
+
+    <div class="card-action">
+        <a id="upload" class="waves-effect waves-light btn">How much?</a>
+        <a id="restart" class="waves-effect waves-light btn" style="display: none;">もう一回</a>
+    </div>
+</div>
+
+
+<script>
+async function startVideo() {
+    const devices = await navigator.mediaDevices.enumerateDevices()
+    const video_devices = devices.filter(value => value.kind == 'videoinput')
+    console.log(video_devices)
+    const constraints = {
+        audio: false,
+        video: { deviceId: video_devices[0].deviceId }
+    }
+
+    try {
+        const stream = await navigator.mediaDevices.getUserMedia(constraints)
+        document.querySelector('video').srcObject = stream
+    } catch (e) {
+        console.error(e)
+    }
+}
+
+function uploading() {
+    document.querySelector('canvas').style.display = 'block'
+    document.querySelector('video').style.display = 'none'
+    document.querySelector('#progress').style.display= 'block'
+    document.querySelector('#upload').classList.add('disabled')
+}
+
+function done_upload() {
+    document.querySelector('#progress').style.display= 'none'
+    document.querySelector('#upload').classList.remove('disabled')
+    document.querySelector('#upload').style.display = 'none'
+    document.querySelector('#restart').style.display = 'inline-block'
+}
+
+async function takeSnapShot() {
+    const video = document.querySelector('video')
+    const canvas = document.querySelector('canvas')
+    const ctx = canvas.getContext('2d')
+    const w = video.offsetWidth
+    const h = video.offsetHeight
+    canvas.setAttribute('width', w)
+    canvas.setAttribute('height', h)
+    ctx.drawImage(video, 0, 0, w, h)
+
+    canvas.toBlob(function(blob) {
+        const img = document.querySelector('#image')
+        img.src = window.URL.createObjectURL(blob)
+        uploading()
+
+        const xhr = new XMLHttpRequest()
+        xhr.open('POST', '/predict')
+        xhr.onload = () => {
+            console.log(xhr.response)
+            const res = JSON.parse(xhr.response)
+            document.querySelector('#price').textContent = res.Prediction + ' ' + res.price + '円'
+            done_upload()
+        }
+        xhr.onerror = () => {
+            console.log("error!")
+            done_upload()
+        }
+        const formData = new FormData()
+        formData.append('image', blob, 'image.jpeg')
+        xhr.send(formData)
+    }, 'image/jpeg', 0.95)
+}
+
+function restart() {
+    document.querySelector('canvas').style.display = 'none'
+    document.querySelector('video').style.display = 'block'
+    document.querySelector('#upload').style.display = 'inline-block'
+    document.querySelector('#restart').style.display = 'none'
+    document.querySelector('#price').textContent = ''
+}
+
+document.querySelector('#upload').addEventListener('click', (e) => { takeSnapShot(e) })
+document.querySelector('#restart').addEventListener('click', (e) => { restart(e) })
+startVideo()
+
+</script>
+{% endblock %}
