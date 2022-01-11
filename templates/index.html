@@ -3,25 +3,27 @@
 
 <div class="card blue-grey darken-1">
     <div class="card-content white-text">
-        <div class="section">
+        <div class="section center">
             <video id="video" autoplay playsinline style="width:640px; height: 480px"></video>
             <canvas style="display: none;"></canvas>
             <img id="image" style="display: none;"></img>
         </div>
         <div class="section">
-            <h4>この果物はなに？ いくら？</h4>
+            <h4 class="center-align">この果物はなに？ いくら？</h4>
 
             <div id="progress" class="progress" style="display: none;">
                 <div class="indeterminate"></div>
             </div>
 
-            <h4 id="price"></h4>
+            <h4 id="price" class="center-align"></h4>
         </div>
     </div>
 
     <div class="card-action">
+        <div style="display:flex; justify-content: center;">
         <a id="upload" class="waves-effect waves-light btn">How much?</a>
         <a id="restart" class="waves-effect waves-light btn" style="display: none;">もう一回</a>
+        </div>
     </div>
 </div>
 
@@ -45,7 +47,7 @@ async function startVideo() {
 }
 
 function uploading() {
-    document.querySelector('canvas').style.display = 'block'
+    document.querySelector('canvas').style.display = 'inline-block'
     document.querySelector('video').style.display = 'none'
     document.querySelector('#progress').style.display= 'block'
     document.querySelector('#upload').classList.add('disabled')
@@ -78,7 +80,7 @@ async function takeSnapShot() {
         xhr.onload = () => {
             console.log(xhr.response)
             const res = JSON.parse(xhr.response)
-            document.querySelector('#price').textContent = res.Prediction + ' ' + res.price + '円'
+            document.querySelector('#price').textContent = res.prediction + ' ' + res.price + '円'
             done_upload()
         }
         xhr.onerror = () => {
@@ -93,7 +95,7 @@ async function takeSnapShot() {
 
 function restart() {
     document.querySelector('canvas').style.display = 'none'
-    document.querySelector('video').style.display = 'block'
+    document.querySelector('video').style.display = 'inline-block'
     document.querySelector('#upload').style.display = 'inline-block'
     document.querySelector('#restart').style.display = 'none'
     document.querySelector('#price').textContent = ''
